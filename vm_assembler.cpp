@@ -17,7 +17,7 @@
 using namespace std;
 using std::sregex_token_iterator;
 
-const int MEM_SIZE = 100000;
+const int MEM_SIZE = 1000000;
 const int TEMP_SIZE = 3;
 const int C_SIZE = 7;
 const int REG_SIZE = 14;
@@ -938,7 +938,7 @@ int main(int argc, char* argv[])
 
 	registers[8] = PC;
 	registers[12] = SL;
-	std::cout << "PC: " << PC << endl;
+	//std::cout << "PC: " << PC << endl;
 	//std::cout << "Register 12: " << registers[12] << endl;
 
 	char *vmChar, letter;
@@ -1038,15 +1038,15 @@ int main(int argc, char* argv[])
 			labelAddr = IR.opd2;						// get the address in memory where value is stored
 			intLabelAddress = (int*)(mem + labelAddr);	// an integer size chunk of memory is what we want
 			vmInt = *intLabelAddress;					// get the value from that chunk of memory and save it in vmInt
-			if (vmInt > 500 && vmInt < 600)							// check to see if the value is newline, comma or space because added 500 to each value 
-			{
-				vmInt = *intLabelAddress - 500;			// to get their Ascii values, need to subtract 500 now
-				registers[IR.opd1] = vmInt;				// save the Ascii value into destination register
-			}
-			else
-			{
+			//if (vmInt > 500 && vmInt < 600)							// check to see if the value is newline, comma or space because added 500 to each value 
+			//{
+			//	vmInt = *intLabelAddress - 500;			// to get their Ascii values, need to subtract 500 now
+			//	registers[IR.opd1] = vmInt;				// save the Ascii value into destination register
+			//}
+			//else
+			//{
 				registers[IR.opd1] = vmInt;	// save the integer value into the destination register
-			}
+			//}
 			break;
 
 		case STB:
@@ -1063,10 +1063,11 @@ int main(int argc, char* argv[])
 			letter = *vmChar;
 			registers[IR.opd1] = 0;
 			registers[IR.opd1] = letter;
-break;
+			break;
 
 		case ADD:
 			registers[IR.opd1] = registers[IR.opd1] + registers[IR.opd2];
+			//cout << " Added opd1 + opd2:  " << registers[IR.opd1] << endl;
 			break;
 
 		case ADI:
@@ -1086,12 +1087,13 @@ break;
 			break;
 
 		case AND:
-			if (registers[IR.opd1] == registers[IR.opd2]) {
+			if (registers[IR.opd1] == 1 &&  registers[IR.opd2] == 1) {
 				registers[IR.opd1] = 1;
 			}
 			else {
 				registers[IR.opd1] = 0;
 			}
+			break;
 
 		case OR:
 			if (registers[IR.opd1] == 1 || registers[IR.opd2] == 1) {
@@ -1100,6 +1102,7 @@ break;
 			else {
 				registers[IR.opd1] = 0;
 			}
+			break;
 
 		case CMP:
 			if (registers[IR.opd1] == registers[IR.opd2])
@@ -1151,7 +1154,7 @@ break;
 				break;
 
 			case 2:
-				std::cout << "Please enter a number:  ";
+				//std::cout << "Please enter a number:  ";
 				//int myInt;
 				std::cin >> vmInt;
 				registers[3] = vmInt;
@@ -1183,7 +1186,7 @@ break;
 				//myChar = getchar();
  				registers[3] = myChar;
 				//std::cout << "character is: " << char(registers[3]) << endl;
-
+				break;
 				//if (registers[0] == 0)
 				//{
 				//	for (int j = 0; j < sizeof(tempArr); j++)
