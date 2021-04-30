@@ -545,7 +545,13 @@ int main(int argc, char* argv[])
 						*it++;
 						if (passCount == 1)
 						{
-							if (*it == "'\\n'" || *it == "'\\s'") {
+							if (*it == "'\\n'") {
+								symbolTable.insert(pair<string, int>(label, PC));
+								start += 4;
+								PC += 4;
+								SL += 4;
+							}
+							else if ( *it == "'\\s'") {
 								symbolTable.insert(pair<string, int>(label, PC));
 								start += 4;
 								PC += 4;
@@ -564,11 +570,11 @@ int main(int argc, char* argv[])
 							if (*it == "'\\n'" || *it == "'\\s'") {
 								string intTemp = *it;
 								labelAddr = symbolTable.find(label)->second;
-								if (*it == "'\n") {
-									addIntToMemArray("10", labelAddr, mem);
+								if (*it == "'\\s'") {
+									addIntToMemArray("32", labelAddr, mem);
 								}
 								else {
-									addIntToMemArray("32", labelAddr, mem);
+									addIntToMemArray("10", labelAddr, mem);
 								}
 								PC += 4;
 								SL += 4;
