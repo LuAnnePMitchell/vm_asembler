@@ -378,6 +378,9 @@ void addOpCodeToMemArray(int opCode, int PC, char mem[])
 	*ii = opCode;
 }
 
+int intToAscii(int number) {
+	return '0' + number;
+}
 int main(int argc, char* argv[])
 {
 	int *ii, *intLabelAddress, labelAddr;
@@ -542,18 +545,44 @@ int main(int argc, char* argv[])
 						*it++;
 						if (passCount == 1)
 						{
-							symbolTable.insert(pair<string, int>(label, PC));
-							start += 1;
-							//std::cout << "it: " << *it << endl;
+							if (*it == "'\\n'" || *it == "'\\s'") {
+								symbolTable.insert(pair<string, int>(label, PC));
+								start += 4;
+								PC += 4;
+								SL += 4;
+							}
+							else {
+								symbolTable.insert(pair<string, int>(label, PC));
+								start += 1;
+								//std::cout << "it: " << *it << endl;
+								PC += 1;
+								SL += 1;
+							}
 						}
 						else
 						{
-							string charTemp = *it;
-							labelAddr = symbolTable.find(label)->second;
-							addCharToMemArray(charTemp, labelAddr, mem);
+							if (*it == "'\\n'" || *it == "'\\s'") {
+								string intTemp = *it;
+								labelAddr = symbolTable.find(label)->second;
+								if (*it == "'\n") {
+									addIntToMemArray("10", labelAddr, mem);
+								}
+								else {
+									addIntToMemArray("32", labelAddr, mem);
+								}
+								PC += 4;
+								SL += 4;
+							}
+							else {
+								string charTemp = *it;
+								labelAddr = symbolTable.find(label)->second;
+								addCharToMemArray(charTemp, labelAddr, mem);
+								PC += 1;
+								SL += 1;
+							}
 						}
-						PC += 1;
-						SL += 1;
+
+
 					}
 					//}
 
@@ -1120,6 +1149,8 @@ int main(int argc, char* argv[])
 			break;
 
 		case TRP:
+			char myChar;
+			int asciiValue;
 
 			switch (IR.opd1)
 			{
@@ -1162,22 +1193,36 @@ int main(int argc, char* argv[])
 				break;
 
 			case 3:
-				if (registers[3] == 13) {
+				
+				//myChar = char(registers[3]);
+				//cout << char(myChar);
+				if (registers[3] == 62) {
 					cout << '\n';
+					std::cout << char(registers[3]);
 				}
-				else if (registers[3] == 92){
-					cout << '\n';
-				}
+				//cout << intToAscii(registers[3]);
 				else if (registers[3] == 32) {
 					cout << " ";
 				}
+				else if (registers[3] == 10) {
+					cout << '\n';
+					//cout << " ";
+				}
+				else if (registers[3] == 92){
+					cout << '\n';
+					//cout << " ";
+				}
+
 				else {
+					//cout << myChar;
+					//cout << '\n';
 					std::cout << char(registers[3]);
+					//cout << " ";
 				}
 				break;
 
 			case 4:
-				char myChar = 0;
+				myChar = 0;
 				registers[3] = 0;
 				//int tempCnt = registers[0];
 				//int i = 0;
