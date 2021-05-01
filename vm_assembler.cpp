@@ -344,7 +344,7 @@ int ifElseWhile(string l)
 		return 1;
 	else if (l == "reset_cnt")
 		return 1;*/
-return yesLabel;
+	return yesLabel;
 }
 
 void addIntToMemArray(string tempInt, int address, char mem[])
@@ -469,14 +469,14 @@ int main(int argc, char* argv[])
 
 			// iterate through the tempVector and populate the Symbol Table on first pass, populate memory on second pass
 			for (vector<string>::const_iterator it = tempVector.begin(); it < tempVector.end(); it++)
-			{ 
+			{
 
 				string label = *it;
 				string code = *it;
 				opCode = getOpCode(code);
 				string ifStatementLabel = *it;
 				int condState = ifElseWhile(ifStatementLabel);
-				
+
 				//if (opCode == -1) {	// it means it has a label, might be a directive or code
 
 				//if (opCode == -1 && condState == -1)
@@ -519,437 +519,437 @@ int main(int argc, char* argv[])
 				//	}
 					//else
 					//{
+				*it++;
+				if (*it == ".INT")
+				{
 					*it++;
-					if (*it == ".INT")
+					// first pass do this:
+					if (passCount == 1)
 					{
-						*it++;
-						// first pass do this:
+						symbolTable.insert(pair<string, int>(label, PC));
+						start += 4;
+						//std::cout << "it: " << *it << endl;
+					}
+					// second pass save the value of *it into mem array:
+					else
+					{
+						string intTemp = *it;
+						labelAddr = symbolTable.find(label)->second;
+						addIntToMemArray(intTemp, labelAddr, mem);
+					}
+					PC += 4;
+					SL += 4;
+				}
+				else if (*it == ".BYT")
+				{
+					*it++;
+					if (passCount == 1)
+					{
+						if (*it == "'\\n'") {
+							symbolTable.insert(pair<string, int>(label, PC));
+							start += 4;
+							PC += 4;
+							SL += 4;
+						}
+						else if (*it == "'\\s'") {
+							symbolTable.insert(pair<string, int>(label, PC));
+							start += 4;
+							PC += 4;
+							SL += 4;
+						}
+						else {
+							symbolTable.insert(pair<string, int>(label, PC));
+							start += 1;
+							//std::cout << "it: " << *it << endl;
+							PC += 1;
+							SL += 1;
+						}
+					}
+					else
+					{
+						if (*it == "'\\n'" || *it == "'\\s'") {
+							string intTemp = *it;
+							labelAddr = symbolTable.find(label)->second;
+							if (*it == "'\\s'") {
+								addIntToMemArray("32", labelAddr, mem);
+							}
+							else {
+								addIntToMemArray("10", labelAddr, mem);
+							}
+							PC += 4;
+							SL += 4;
+						}
+						else {
+							string charTemp = *it;
+							labelAddr = symbolTable.find(label)->second;
+							addCharToMemArray(charTemp, labelAddr, mem);
+							PC += 1;
+							SL += 1;
+						}
+					}
+
+
+				}
+				//}
+
+				else
+				{
+					if (condState == -1) {
+						if (passCount == 1) {
+							if (label != "") {
+								int tempOpCode = getOpCode(label);
+								if (tempOpCode == -1) {
+									labels.push_back(label);
+								}
+							}
+						}
+					}
+					//*it++;
+					if (opCode == -1)
+					{
+						opCode = getOpCode(*it);
 						if (passCount == 1)
 						{
 							symbolTable.insert(pair<string, int>(label, PC));
-							start += 4;
-							//std::cout << "it: " << *it << endl;
+							//cout << "label: " << label << endl;
 						}
-						// second pass save the value of *it into mem array:
+						*it++;
+					}
+					if (passCount == 1)
+					{
+						if (opCode == 1) // it's a JMP, only has one operand
+						{
+							PC += 12;
+						}
+						else if (opCode == 2) // it's a JMR, only has one operand
+						{
+							PC += 12;
+						}
+						else if (opCode == 21) // it's TRP, only has one operand
+						{
+							PC += 12;
+						}
 						else
 						{
-							string intTemp = *it;
-							labelAddr = symbolTable.find(label)->second;
-							addIntToMemArray(intTemp, labelAddr, mem);
+							*it++;
+							PC += 12;
 						}
-						PC += 4;
 						SL += 4;
 					}
-					else if (*it == ".BYT")
-					{
-						*it++;
-						if (passCount == 1)
-						{
-							if (*it == "'\\n'") {
-								symbolTable.insert(pair<string, int>(label, PC));
-								start += 4;
-								PC += 4;
-								SL += 4;
-							}
-							else if ( *it == "'\\s'") {
-								symbolTable.insert(pair<string, int>(label, PC));
-								start += 4;
-								PC += 4;
-								SL += 4;
-							}
-							else {
-								symbolTable.insert(pair<string, int>(label, PC));
-								start += 1;
-								//std::cout << "it: " << *it << endl;
-								PC += 1;
-								SL += 1;
-							}
-						}
-						else
-						{
-							if (*it == "'\\n'" || *it == "'\\s'") {
-								string intTemp = *it;
-								labelAddr = symbolTable.find(label)->second;
-								if (*it == "'\\s'") {
-									addIntToMemArray("32", labelAddr, mem);
-								}
-								else {
-									addIntToMemArray("10", labelAddr, mem);
-								}
-								PC += 4;
-								SL += 4;
-							}
-							else {
-								string charTemp = *it;
-								labelAddr = symbolTable.find(label)->second;
-								addCharToMemArray(charTemp, labelAddr, mem);
-								PC += 1;
-								SL += 1;
-							}
-						}
-
-
-					}
-					//}
-
 					else
 					{
-						if (condState == -1) {
-							if (passCount == 1) {
-								if (label != "") {
-									int tempOpCode = getOpCode(label);
-									if(tempOpCode == -1){
-										labels.push_back(label);
-									}
-								}
-							}
-						}
-						//*it++;
-						if (opCode == -1)
+						if (opCode == JMP)	// JMP to specified address in register 1
 						{
-							opCode = getOpCode(*it);
-							if (passCount == 1)
-							{
-								symbolTable.insert(pair<string, int>(label, PC));
-								//cout << "label: " << label << endl;
-							}
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							labelAddr = symbolTable.find(*it)->second;
+							addLabelAddressToMemArray(labelAddr, PC, mem);
+							PC += 8;
+						}
+						else if (opCode == JMR)
+						{
+							//cout << "opCode: " << opCode << endl;
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 8;
+						}
+						else if (opCode == BNZ)
+						{
+							//cout << "opCode: " << opCode << endl;
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
 							*it++;
+							PC += 4;
+							labelAddr = symbolTable.find(*it)->second;
+							addLabelAddressToMemArray(labelAddr, PC, mem);
+							PC += 4;
 						}
-						if (passCount == 1)
+						// not sure if BGT is functional
+						else if (opCode == BGT)
 						{
-							if (opCode == 1) // it's a JMP, only has one operand
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							*it++;
+							PC += 4;
+							labelAddr = symbolTable.find(*it)->second;
+							addLabelAddressToMemArray(labelAddr, PC, mem);
+							PC += 4;
+						}
+						// not sure if BLT is functional
+						else if (opCode == BLT)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							*it++;
+							PC += 4;
+							labelAddr = symbolTable.find(*it)->second;
+							addLabelAddressToMemArray(labelAddr, PC, mem);
+							PC += 4;
+						}
+						// not sure if BRZ is functional
+						else if (opCode == BRZ)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							*it++;
+							PC += 4;
+							labelAddr = symbolTable.find(*it)->second;
+							addLabelAddressToMemArray(labelAddr, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == MOV)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == LDA)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							labelAddr = symbolTable.find(*it)->second;
+							addLabelAddressToMemArray(labelAddr, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == STR)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							int *tempSTR;
+							tempSTR = (int*)(mem + PC);
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							*it++;
+							PC += 4;
+							destReg = getRegister(*it);
+							if (destReg == -1) // it's label
 							{
-								PC += 12;
-							}
-							else if (opCode == 2) // it's a JMR, only has one operand
-							{
-								PC += 12;
-							}
-							else if (opCode == 21) // it's TRP, only has one operand
-							{
-								PC += 12;
+								labelAddr = symbolTable.find(*it)->second;
+								addLabelAddressToMemArray(labelAddr, PC, mem);
 							}
 							else
 							{
-								*it++;
-								PC += 12;
+								opCode = STR2;
+								*tempSTR = opCode;
+								addRegisterToMemArray(destReg, PC, mem);
 							}
-							SL += 4;
+							PC += 4;
+						}
+						else if (opCode == LDR)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							int *tempLDR;
+							// save this PC location incase 2nd operand is a register, not a label
+							tempLDR = (int*)(mem + PC);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							// if *it is not a register do this:
+							if (sourceReg == -1)
+							{
+								labelAddr = symbolTable.find(*it)->second;
+								addLabelAddressToMemArray(labelAddr, PC, mem);
+							}
+							else  //*it is a register do this:
+							{	// change value in mem location where opCode is stored to 23, which is LDR2 in enum above
+								opCode = LDR2;
+								*tempLDR = opCode;
+								addRegisterToMemArray(sourceReg, PC, mem);
+							}
+							PC += 4;
+						}
+						else if (opCode == STB)
+						{
+							int *tempSTB;
+							tempSTB = (int*)(mem + PC);
+							addOpCodeToMemArray(opCode, PC, mem);
+							//cout << "opCode ii: " << *ii << endl;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							*it++;
+							PC += 4;
+							destReg = getRegister(*it);
+							if (destReg == -1)
+							{
+								labelAddr = symbolTable.find(*it)->second;
+								addLabelAddressToMemArray(labelAddr, PC, mem);
+							}
+							else
+							{
+								opCode = STB2;
+								*tempSTB = opCode;
+								addRegisterToMemArray(destReg, PC, mem);
+							}
+							PC += 4;
+						}
+						else if (opCode == LDB)
+						{
+							int *tempLDB;
+							tempLDB = (int*)(mem + PC);
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+
+							sourceReg = getRegister(*it);
+							// if *it is not a register do this:
+							if (sourceReg == -1)
+							{
+								labelAddr = symbolTable.find(*it)->second;
+								addLabelAddressToMemArray(labelAddr, PC, mem);
+							}
+							else  //*it is a register do this:
+							{	// change value in mem location where opCode is stored to 23, which is LDR2 in enum above
+								opCode = LDB2;
+								*tempLDB = opCode;
+								addRegisterToMemArray(sourceReg, PC, mem);
+							}
+							PC += 4;
+						}
+						else if (opCode == ADD)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							//cout << "opCode: " << opCode << endl;
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							//cout << "*it: " << *it << endl;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == ADI)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							//cout << "opCode: " << opCode << endl;
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							//cout << "*it: " << *it << endl;
+							string immedValue = *it;
+							ii = (int*)(mem + PC);
+							*ii = stoi(immedValue);
+							PC += 4;
+						}
+						else if (opCode == SUB)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == MUL)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == DIV)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == AND)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == OR)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == CMP)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							destReg = getRegister(*it);
+							addRegisterToMemArray(destReg, PC, mem);
+							*it++;
+							PC += 4;
+							sourceReg = getRegister(*it);
+							addRegisterToMemArray(sourceReg, PC, mem);
+							PC += 4;
+						}
+						else if (opCode == TRP)
+						{
+							addOpCodeToMemArray(opCode, PC, mem);
+							PC += 4;
+							string immVal = *it;
+							ii = (int*)(mem + PC);
+							*ii = stoi(immVal);
+							PC += 8;
 						}
 						else
 						{
-							if (opCode == JMP)	// JMP to specified address in register 1
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								labelAddr = symbolTable.find(*it)->second;
-								addLabelAddressToMemArray(labelAddr, PC, mem);
-								PC += 8;
-							}
-							else if (opCode == JMR)
-							{
-								//cout << "opCode: " << opCode << endl;
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 8;
-							}
-							else if (opCode == BNZ)
-							{
-								//cout << "opCode: " << opCode << endl;
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								*it++;
-								PC += 4;
-								labelAddr = symbolTable.find(*it)->second;
-								addLabelAddressToMemArray(labelAddr, PC, mem);
-								PC += 4;
-							}
-							// not sure if BGT is functional
-							else if (opCode == BGT)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								*it++;
-								PC += 4;
-								labelAddr = symbolTable.find(*it)->second;
-								addLabelAddressToMemArray(labelAddr, PC, mem);
-								PC += 4;
-							}
-							// not sure if BLT is functional
-							else if (opCode == BLT)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								*it++;
-								PC += 4;
-								labelAddr = symbolTable.find(*it)->second;
-								addLabelAddressToMemArray(labelAddr, PC, mem);
-								PC += 4;
-							}
-							// not sure if BRZ is functional
-							else if (opCode == BRZ)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								*it++;
-								PC += 4;
-								labelAddr = symbolTable.find(*it)->second;
-								addLabelAddressToMemArray(labelAddr, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == MOV)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == LDA)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								labelAddr = symbolTable.find(*it)->second;
-								addLabelAddressToMemArray(labelAddr, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == STR)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								int *tempSTR;
-								tempSTR = (int*)(mem + PC);
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								*it++;
-								PC += 4;
-								destReg = getRegister(*it);
-								if (destReg == -1) // it's label
-								{
-									labelAddr = symbolTable.find(*it)->second;
-									addLabelAddressToMemArray(labelAddr, PC, mem);
-								}
-								else
-								{
-									opCode = STR2;
-									*tempSTR = opCode;
-									addRegisterToMemArray(destReg, PC, mem);
-								}
-								PC += 4;
-							}
-							else if (opCode == LDR)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								int *tempLDR;
-								// save this PC location incase 2nd operand is a register, not a label
-								tempLDR = (int*)(mem + PC);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								// if *it is not a register do this:
-								if (sourceReg == -1)
-								{
-									labelAddr = symbolTable.find(*it)->second;
-									addLabelAddressToMemArray(labelAddr, PC, mem);
-								}
-								else  //*it is a register do this:
-								{	// change value in mem location where opCode is stored to 23, which is LDR2 in enum above
-									opCode = LDR2;
-									*tempLDR = opCode;
-									addRegisterToMemArray(sourceReg, PC, mem);
-								}
-								PC += 4;
-							}
-							else if (opCode == STB)
-							{
-								int *tempSTB;
-								tempSTB = (int*)(mem + PC);
-								addOpCodeToMemArray(opCode, PC, mem);
-								//cout << "opCode ii: " << *ii << endl;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								*it++;
-								PC += 4;
-								destReg = getRegister(*it);
-								if (destReg == -1)
-								{
-									labelAddr = symbolTable.find(*it)->second;
-									addLabelAddressToMemArray(labelAddr, PC, mem);
-								}
-								else
-								{
-									opCode = STB2;
-									*tempSTB = opCode;
-									addRegisterToMemArray(destReg, PC, mem);
-								}
-								PC += 4;
-							}
-							else if (opCode == LDB)
-							{
-								int *tempLDB;
-								tempLDB = (int*)(mem + PC);
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-
-								sourceReg = getRegister(*it);
-								// if *it is not a register do this:
-								if (sourceReg == -1)
-								{
-									labelAddr = symbolTable.find(*it)->second;
-									addLabelAddressToMemArray(labelAddr, PC, mem);
-								}
-								else  //*it is a register do this:
-								{	// change value in mem location where opCode is stored to 23, which is LDR2 in enum above
-									opCode = LDB2;
-									*tempLDB = opCode;
-									addRegisterToMemArray(sourceReg, PC, mem);
-								}
-								PC += 4;
-							}
-							else if (opCode == ADD)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								//cout << "opCode: " << opCode << endl;
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								//cout << "*it: " << *it << endl;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == ADI)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								//cout << "opCode: " << opCode << endl;
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								//cout << "*it: " << *it << endl;
-								string immedValue = *it;
-								ii = (int*)(mem + PC);
-								*ii = stoi(immedValue);
-								PC += 4;
-							}
-							else if (opCode == SUB)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == MUL)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == DIV)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == AND)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == OR)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == CMP)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								destReg = getRegister(*it);
-								addRegisterToMemArray(destReg, PC, mem);
-								*it++;
-								PC += 4;
-								sourceReg = getRegister(*it);
-								addRegisterToMemArray(sourceReg, PC, mem);
-								PC += 4;
-							}
-							else if (opCode == TRP)
-							{
-								addOpCodeToMemArray(opCode, PC, mem);
-								PC += 4;
-								string immVal = *it;
-								ii = (int*)(mem + PC);
-								*ii = stoi(immVal);
-								PC += 8;
-							}
-							else
-							{
-								//*it++;
-								//PC += 12;
-							}
-							SL += 12;
+							//*it++;
+							//PC += 12;
 						}
-					
+						SL += 12;
+					}
+
 				}
 			}
 		}
@@ -1080,8 +1080,8 @@ int main(int argc, char* argv[])
 			//}
 			//else
 			//{
-				registers[IR.opd1] = vmInt;	// save the integer value into the destination register
-			//}
+			registers[IR.opd1] = vmInt;	// save the integer value into the destination register
+		//}
 			break;
 
 		case STB:
@@ -1122,7 +1122,7 @@ int main(int argc, char* argv[])
 			break;
 
 		case AND:
-			if (registers[IR.opd1] == 1 &&  registers[IR.opd2] == 1) {
+			if (registers[IR.opd1] == 1 && registers[IR.opd2] == 1) {
 				registers[IR.opd1] = 1;
 			}
 			else {
@@ -1199,7 +1199,7 @@ int main(int argc, char* argv[])
 				break;
 
 			case 3:
-				
+
 				//myChar = char(registers[3]);
 				//cout << char(myChar);
 				if (registers[3] == 62) {
@@ -1214,7 +1214,7 @@ int main(int argc, char* argv[])
 					cout << '\n';
 					//cout << " ";
 				}
-				else if (registers[3] == 92){
+				else if (registers[3] == 92) {
 					cout << '\n';
 					//cout << " ";
 				}
@@ -1235,7 +1235,7 @@ int main(int argc, char* argv[])
 				std::cout << "Please enter a character ";
 				cin >> myChar;
 				//myChar = getchar();
- 				registers[3] = myChar;
+				registers[3] = myChar;
 				//std::cout << "character is: " << char(registers[3]) << endl;
 				break;
 				//if (registers[0] == 0)
@@ -1264,7 +1264,7 @@ int main(int argc, char* argv[])
 				//	//tempArr.push_back(myChar);
 				//		tempCnt++;
 				//		registers[5] = tempCnt;
-				
+
 				//	} while (myChar != '\n');
 				//	registers[3] = tempArr[0];
 				//}
